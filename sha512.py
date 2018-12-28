@@ -54,7 +54,7 @@ class sha512:
         def update(self, msg):
                 if msg is None:
                         return
-                        if type(msg) is not str:
+                if type(msg) is not str:
                                 raise TypeError("Argument type has to be a string!\n")
 
                 self._buffer += msg
