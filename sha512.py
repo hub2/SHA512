@@ -52,9 +52,18 @@ class sha512:
                 return m, length
 
         def update(self, msg):
-                message, length = self._preprocess(msg)
+                if msg is None:
+                        return
+                        if type(msg) is not str:
+                                raise TypeError("Argument type has to be a string!\n")
+
+                self._buffer += msg
+                self._counter += len(msg)
+                        
+                message, length = self._preprocess(self._buffer)
                 if message is not None and length is not None:
                         print("OK!")
+
                 return message
                 
 
