@@ -37,14 +37,14 @@ class sha512:
 
         def _rightrotate(self, x, y):
                 # return ((x >> y) | (x << (64 - y))) & 0xFFFFFFFFFFFFFFFF
-                return ((x >> y) | (x << (64 - y)))
+                return (x >> y) | (x << (64 - y))
 
         def _preprocess(self, msg):
                 length = len(msg)
                 length_for_padding = struct.pack("!2Q", 0, length)
 
                 message = msg.encode("utf-8") + struct.pack("!B", 128)
-                length = len(msg) + 1
+                length += 1
                 print(message.hex())
 
                 length += sha512._LENGTH_WORD_SIZE
@@ -70,7 +70,7 @@ class sha512:
                         s0 = self._rightrotate(w[i - 15], 1) ^ self._rightrotate(w[i - 15], 8) ^ (w[i - 15] >> 7)
                         s1 = self._rightrotate(w[i - 2], 19) ^ self._rightrotate(w[i - 2], 61) ^ (w[i - 2] >> 6)
                         # w[i] = (w[i - 16] + s0 + w[i - 7] + s1) & 0xFFFFFFFFFFFFFFFF
-                        w[i] = (w[i - 16] + s0 + w[i - 7] + s1)
+                        w[i] = w[i - 16] + s0 + w[i - 7] + s1
 
         def update(self, msg):
                 if msg is None:
