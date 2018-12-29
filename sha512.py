@@ -3,6 +3,9 @@
 import struct
 
 class sha512:
+        _CHUNK_SIZE = 128
+        _LENGTH_WORD_SIZE = 16
+
         _k = (  0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc, 0x3956c25bf348b538,
                 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118, 0xd807aa98a3030242, 0x12835b0145706fbe,
                 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2, 0x72be5d74f27b896f, 0x80deb1fe3b1696b1, 0x9bdc06a725c71235,
@@ -24,8 +27,8 @@ class sha512:
                 0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 )
 
         def __init__(self, msg = None):
-                self._buffer = ""
-                self._counter = 0
+                self._buffer = None
+                self._counter = None
 
                 if msg is not None:
                         if type(msg) is not str:
@@ -39,8 +42,8 @@ class sha512:
                 length = len(msg) + 1
                 msg += chr(0x01 << 8)
 
-                length += 16
-                remaining = 128 - (length % 128)
+                length += sha512._LENGTH_WORD_SIZE
+                remaining = sha512._CHUNK_SIZE - (length % sha512._CHUNK_SIZE)
                 for i in range(remaining):
                         msg += chr(0x00)
                         length +=1
@@ -51,18 +54,33 @@ class sha512:
 
                 return m, length
 
+        def _process(self, msg):
+                print("process function!")
+
         def update(self, msg):
                 if msg is None:
                         return
                 if type(msg) is not str:
                                 raise TypeError("Argument type has to be a string!\n")
 
-                self._buffer += msg
-                self._counter += len(msg)
+                # self._buffer += msg
+                # self._counter += len(msg)
                         
-                message, length = self._preprocess(self._buffer)
+                message, length = self._preprocess(msg)
                 if message is not None and length is not None:
                         print("OK!")
+
+                self._buffer = message
+                self._counter = length
+
+                # remaining_length = length
+                # while remaining_length >= 128:
+                #         self._process(message._)
+
+                remaining_length = self._counter
+                while remaining_length >= 128:
+                        self._process(self._buffer[:128])
+                        remaining_length -= 128
 
                 return message
                 
