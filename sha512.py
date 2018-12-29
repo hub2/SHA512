@@ -35,48 +35,48 @@ class sha512:
                                 raise TypeError("Argument type has to be a string!\n")
                         self.update(msg)
 
-        def _rotate_right(self, x, y):
-                return ((x >> y) | (x << (64 - y))) & 0xFFFFFFFFFFFFFFFF
+        def _rightrotate(self, x, y):
+                # return ((x >> y) | (x << (64 - y))) & 0xFFFFFFFFFFFFFFFF
+                return ((x >> y) | (x << (64 - y)))
 
         def _preprocess(self, msg):
                 length = len(msg)
-                length_for_padding = struct.pack("!Q", 0) + struct.pack("!Q", length)
+                length_for_padding = struct.pack("!2Q", 0, length)
 
                 message = msg.encode("utf-8") + struct.pack("!B", 128)
                 length = len(msg) + 1
                 print(message.hex())
-                #print(msg.encode("utf-8").hex())
 
                 length += sha512._LENGTH_WORD_SIZE
-
-                print("length including additional 17 bytes: " + str(length))
-                aux = 0
 
                 remaining = sha512._CHUNK_SIZE - (length % sha512._CHUNK_SIZE)
                 for i in range(remaining):
                         message += struct.pack("!B", 0)
                         length +=1
-                        aux += 1
 
                 message += length_for_padding
                 
-                print("len of msg after preprocessing: " + str(length))
-                print("number of added 0-bytes: " + str(aux))
-                print("message: " + message.hex())
+                # print("len of msg after preprocessing: " + str(length))
+                # print("number of added 0-bytes: " + str(aux))
+                # print("message: " + message.hex())
 
                 return message, length
 
-        def _process(self, msg):
-                print("process function!")
+        def _process(self, chunk):
+                w = [0] * 80
+                w[0:16] = struct.unpack("!16Q", chunk)
+
+                for i in range(16, 80):
+                        s0 = self._rightrotate(w[i - 15], 1) ^ self._rightrotate(w[i - 15], 8) ^ (w[i - 15] >> 7)
+                        s1 = self._rightrotate(w[i - 2], 19) ^ self._rightrotate(w[i - 2], 61) ^ (w[i - 2] >> 6)
+                        # w[i] = (w[i - 16] + s0 + w[i - 7] + s1) & 0xFFFFFFFFFFFFFFFF
+                        w[i] = (w[i - 16] + s0 + w[i - 7] + s1)
 
         def update(self, msg):
                 if msg is None:
                         return
                 if type(msg) is not str:
                                 raise TypeError("Argument type has to be a string!\n")
-
-                # self._buffer += msg
-                # self._counter += len(msg)
                         
                 message, length = self._preprocess(msg)
                 if message is not None and length is not None:
@@ -85,21 +85,17 @@ class sha512:
                 self._buffer = message
                 self._counter = length
 
-                # remaining_length = length
-                # while remaining_length >= 128:
-                #         self._process(message._)
-
                 remaining_length = self._counter
                 while remaining_length >= 128:
                         self._process(self._buffer[:128])
+                        self._buffer = self._buffer[128:]
                         remaining_length -= 128
+
 
                 return message
                 
 
 def main():
-        string = "6162638000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003"
-        print("string len: " + str(len(string)))
         haszyk = sha512().update("abc")
 
 if __name__ == "__main__":
