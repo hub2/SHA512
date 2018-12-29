@@ -39,20 +39,32 @@ class sha512:
                 return ((x >> y) | (x << (64 - y))) & 0xFFFFFFFFFFFFFFFF
 
         def _preprocess(self, msg):
+                length = len(msg)
+                length_for_padding = struct.pack("!Q", 0) + struct.pack("!Q", length)
+
+                message = msg.encode("utf-8") + struct.pack("!B", 128)
                 length = len(msg) + 1
-                msg += chr(0x01 << 8)
+                print(message.hex())
+                #print(msg.encode("utf-8").hex())
 
                 length += sha512._LENGTH_WORD_SIZE
+
+                print("length including additional 17 bytes: " + str(length))
+                aux = 0
+
                 remaining = sha512._CHUNK_SIZE - (length % sha512._CHUNK_SIZE)
                 for i in range(remaining):
-                        msg += chr(0x00)
+                        message += struct.pack("!B", 0)
                         length +=1
+                        aux += 1
 
-                m = msg.encode("utf-8") + struct.pack('!Q', 0) + struct.pack('!Q', length)
+                message += length_for_padding
                 
                 print("len of msg after preprocessing: " + str(length))
+                print("number of added 0-bytes: " + str(aux))
+                print("message: " + message.hex())
 
-                return m, length
+                return message, length
 
         def _process(self, msg):
                 print("process function!")
@@ -86,6 +98,8 @@ class sha512:
                 
 
 def main():
+        string = "6162638000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003"
+        print("string len: " + str(len(string)))
         haszyk = sha512().update("abc")
 
 if __name__ == "__main__":
