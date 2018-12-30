@@ -36,8 +36,7 @@ class sha512:
                         self.update(msg)
 
         def _rightrotate(self, x, y):
-                # return ((x >> y) | (x << (64 - y))) & 0xFFFFFFFFFFFFFFFF
-                return (x >> y) | (x << (64 - y))
+                return ((x >> y) | (x << (64 - y))) & 0xFFFFFFFFFFFFFFFF
 
         def _preprocess(self, msg):
                 length = len(msg)
@@ -69,8 +68,27 @@ class sha512:
                 for i in range(16, 80):
                         s0 = self._rightrotate(w[i - 15], 1) ^ self._rightrotate(w[i - 15], 8) ^ (w[i - 15] >> 7)
                         s1 = self._rightrotate(w[i - 2], 19) ^ self._rightrotate(w[i - 2], 61) ^ (w[i - 2] >> 6)
-                        # w[i] = (w[i - 16] + s0 + w[i - 7] + s1) & 0xFFFFFFFFFFFFFFFF
-                        w[i] = w[i - 16] + s0 + w[i - 7] + s1
+                        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) & 0xFFFFFFFFFFFFFFFF
+
+                a, b, c, d, e, f, g, h = self._h
+
+                for i in range(80):
+                        S0 = self._rightrotate(a, 28) ^ self._rightrotate(a, 34) ^ self._rightrotate(a, 39)
+                        maj = (a & b) ^ (a & c) ^ (b & c)
+                        temp2 = S0 + maj
+
+                        S1 = self._rightrotate(e, 14) ^ self._rightrotate(e, 18) ^ self._rightrotate(e, 41)
+                        ch = (e & f) ^ (~e & g)
+                        temp1 = h + S1 + ch + self._k[i] + w[i]
+
+                        h = g
+                        g = f
+                        f = e
+                        e = d + temp1 & 0xFFFFFFFFFFFFFFFF
+                        d = c
+                        c = b
+                        b = a
+                        a = (temp1 + temp2) & 0xFFFFFFFFFFFFFFFF
 
         def update(self, msg):
                 if msg is None:
