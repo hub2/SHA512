@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
-import struct
+import struct, copy
 
 class sha512:
         _CHUNK_SIZE = 128
         _LENGTH_WORD_SIZE = 16
+        _OUTPUT_SIZE = 8
 
         _k = (  0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc, 0x3956c25bf348b538,
                 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118, 0xd807aa98a3030242, 0x12835b0145706fbe,
@@ -27,8 +28,8 @@ class sha512:
                 0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 )
 
         def __init__(self, msg = None):
-                self._buffer = None
-                self._counter = None
+                self._buffer = ""
+                self._counter = 0
 
                 if msg is not None:
                         if type(msg) is not str:
@@ -40,11 +41,10 @@ class sha512:
 
         def _preprocess(self, msg):
                 length = len(msg)
-                length_for_padding = struct.pack("!2Q", 0, length)
+                length_for_padding = struct.pack("!2Q", 0, length << 3)
 
                 message = msg.encode("utf-8") + struct.pack("!B", 128)
                 length += 1
-                print(message.hex())
 
                 length += sha512._LENGTH_WORD_SIZE
 
@@ -54,11 +54,7 @@ class sha512:
                         length +=1
 
                 message += length_for_padding
-                
-                # print("len of msg after preprocessing: " + str(length))
-                # print("number of added 0-bytes: " + str(aux))
-                # print("message: " + message.hex())
-
+               
                 return message, length
 
         def _process(self, chunk):
@@ -90,31 +86,38 @@ class sha512:
                         b = a
                         a = (temp1 + temp2) & 0xFFFFFFFFFFFFFFFF
 
+                self._h = [(x+y) & 0xFFFFFFFFFFFFFFFF for x,y in zip(self._h, [a,b,c,d,e,f,g,h])]
+
         def update(self, msg):
                 if msg is None:
                         return
                 if type(msg) is not str:
                                 raise TypeError("Argument type has to be a string!\n")
+
+                self._buffer += msg
+                self._counter += len(msg)
                         
-                message, length = self._preprocess(msg)
-                if message is not None and length is not None:
-                        print("OK!")
+                message, length = self._preprocess(self._buffer)
 
-                self._buffer = message
-                self._counter = length
-
-                remaining_length = self._counter
+                remaining_length = length
                 while remaining_length >= 128:
-                        self._process(self._buffer[:128])
-                        self._buffer = self._buffer[128:]
+                        self._process(message[:128])
+                        message = message[128:]
                         remaining_length -= 128
 
+        def digest(self):
+                h = self.copy()
+                return b''.join([struct.pack('!Q', i) for i in h._h[:self._OUTPUT_SIZE]])
 
-                return message
+        def hexdigest(self):
+                return self.digest().hex()
+
+        def copy(self):
+                return copy.deepcopy(self)
                 
-
 def main():
-        haszyk = sha512().update("abc")
+        haszyk = sha512("abc").hexdigest()
+        print(haszyk)
 
 if __name__ == "__main__":
         main()
